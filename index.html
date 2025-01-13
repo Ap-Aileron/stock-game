@@ -267,8 +267,8 @@
             ctx.strokeStyle = price > priceHistory[0] ? '#44ff44' : '#ff4444';
             ctx.lineWidth = 2;
             
-            const xStep = (canvas.width / (priceHistory.length - 1)) * 0.5; // Multiply by a factor less than 1 to slow down
-            const yScale = (canvas.height / (Math.max(...priceHistory) - Math.min(...priceHistory))) * 0.5; // Multiply by a factor less than 1 to slow down
+            const xStep = (canvas.width / (priceHistory.length - 1))
+            const yScale = (canvas.height / (Math.max(...priceHistory) - Math.min(...priceHistory)))
             
             priceHistory.forEach((p, i) => {
                 const x = i * xStep;
