@@ -172,269 +172,47 @@
     
     <div class="controls">
         <div class="buttons">
-            <button onclick="buyStock()">Buy</button>
-            <button onclick="sellStock()">Sell</button>
+            <!-- Remove inline onclick handlers -->
+            <button id="buyButton">Buy</button>
+            <button id="sellButton">Sell</button>
         </div>
-        <button class="chart-toggle" onclick="toggleChartType()">Toggle Chart Type</button>
+        <button class="chart-toggle" id="toggleButton">Toggle Chart Type</button>
     </div>
 
-    <script>
-        // Initialize variables
-        let price = 100;
-        let shares = 0;
-        let balance = 1000;
-        let portfolioValue = 0;
-        let priceHistory = [];
-        let purchaseMarkers = [];
-        let isLineChart = true;
-        let candleData = [];
-        let timeIndex = 0;
-        
-        // Chart setup
-        const chartContainer = document.getElementById('chart-container');
-        const canvas = document.getElementById('price-chart');
-        const ctx = canvas.getContext('2d');
+    <script type="module">
+        import { 
+            price, 
+            shares, 
+            balance, 
+            portfolioValue, 
+            priceHistory,
+            purchaseMarkers,
+            isLineChart,
+            candleData,
+            timeIndex,
+        } from './global.js';
+    
+        import { updatePrice } from './updatePrice.js';
+        import { sellStock, buyStock } from './ExchangeStocks.js';
+        import { updateNews } from './updateNews.js';
+        import { toggleChartType } from './toggleChartType.js';
+        import { initCanvas } from './canvasManager.js';
 
-        
-        // News items for simulation with impact values
-        const newsItems = [
-            { text: "Company Announces Revolutionary Product Line", impact: 15, positive: true },
-            { text: "Quarterly Earnings Exceed Expectations by 50%", impact: 10, positive: true },
-            { text: "Major Partnership Announced", impact: 8, positive: true },
-            { text: "Supply Chain Disruptions Reported", impact: -12, positive: false },
-            { text: "CEO Unexpectedly Resigns", impact: -15, positive: false },
-            { text: "Regulatory Investigation Announced", impact: -10, positive: false }
-        ];
-        
-        
-        function updatePrice(newsImpact = 0) {
-            timeIndex++;
-            const change = (Math.random() - 0.5) * 5 + newsImpact;
-            price = Math.max(1, price + change);
-            priceHistory.push(price);
-            
-            // Keep only last 100 prices
-            if (priceHistory.length > 100) {
-                priceHistory.shift();
-                // Update markers' time indices when shifting
-                purchaseMarkers = purchaseMarkers
-                    .map(marker => ({
-                        ...marker,
-                        timeIndex: marker.timeIndex - 1
-                    }))
-                    .filter(marker => marker.timeIndex >= 0);
-            }
-            
-            // Update candle data
-            if (priceHistory.length % 5 === 0) {
-                const segment = priceHistory.slice(-5);
-                candleData.push({
-                    open: segment[0],
-                    close: segment[segment.length - 1],
-                    high: Math.max(...segment),
-                    low: Math.min(...segment)
-                });
-                if (candleData.length > 20) candleData.shift();
-            }
-            
-            // Update portfolio value
-            portfolioValue = shares * price;
-            
-            updateDisplay();
-            if (isLineChart) {
-                drawLineChart();
-            } else {
-                drawCandleChart();
-            }
-        }
-
-        
-        function toggleChartType() {
-            isLineChart = !isLineChart;
-            if (isLineChart) {
-                drawLineChart();
-            } else {
-                drawCandleChart();
-            }
-        }
-        
-        // Draw line chart
-        function drawLineChart() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw price line
-            ctx.beginPath();
-            ctx.strokeStyle = price > priceHistory[0] ? '#44ff44' : '#ff4444';
-            ctx.lineWidth = 2;
-            
-            const xStep = (canvas.width / (priceHistory.length - 1))
-            const yScale = (canvas.height / (Math.max(...priceHistory) - Math.min(...priceHistory)))
-            
-            priceHistory.forEach((p, i) => {
-                const x = i * xStep;
-                const y = canvas.height - ((p - Math.min(...priceHistory)) * yScale);
-                
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            });
-            
-            ctx.stroke();
-            
-            // Draw purchase markers with updated positions
-            clearPurchaseMarkers();
-            purchaseMarkers.forEach(marker => {
-                const xPos = (marker.timeIndex / (priceHistory.length - 1)) * canvas.width;
-                
-                const markerElement = document.createElement('div');
-                markerElement.className = 'purchase-marker';
-                markerElement.style.height = canvas.height + 'px';
-                markerElement.style.left = xPos + 'px';
-                
-                const priceLabel = document.createElement('div');
-                priceLabel.className = 'purchase-price';
-                priceLabel.textContent = `$${marker.price.toFixed(2)}`;
-                priceLabel.style.left = xPos + 'px';
-                
-                chartContainer.appendChild(markerElement);
-                chartContainer.appendChild(priceLabel);
-            });
-        }
-
-        
-        // Modified drawCandleChart to use chartContainer
-        function drawCandleChart() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            clearPurchaseMarkers();
-            
-            const candleWidth = canvas.width / 20;
-            const priceRange = Math.max(...candleData.map(d => d.high)) - Math.min(...candleData.map(d => d.low));
-            const yScale = canvas.height / priceRange;
-            const minPrice = Math.min(...candleData.map(d => d.low));
-            
-            candleData.forEach((candle, i) => {
-                const x = i * candleWidth + candleWidth / 2;
-                const color = candle.close > candle.open ? '#44ff44' : '#ff4444';
-                
-                const candleElement = document.createElement('div');
-                candleElement.className = 'candle';
-                candleElement.style.left = x + 'px';
-                candleElement.style.background = color;
-                
-                const candleHeight = Math.abs(candle.close - candle.open) * yScale;
-                const top = canvas.height - Math.max(candle.close, candle.open) * yScale + minPrice * yScale;
-                
-                candleElement.style.height = Math.max(1, candleHeight) + 'px';
-                candleElement.style.top = top + 'px';
-                
-                const wickElement = document.createElement('div');
-                wickElement.className = 'candle-wick';
-                wickElement.style.height = (candle.high - candle.low) * yScale + 'px';
-                wickElement.style.top = (canvas.height - candle.high * yScale + minPrice * yScale) + 'px';
-                
-                chartContainer.appendChild(candleElement);
-                chartContainer.appendChild(wickElement);
-            });
-        }
-
-        
-        function drawCandleChart() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            clearPurchaseMarkers();
-            
-            const candleWidth = canvas.width / 20;
-            const priceRange = Math.max(...candleData.map(d => d.high)) - Math.min(...candleData.map(d => d.low));
-            const yScale = canvas.height / priceRange;
-            const minPrice = Math.min(...candleData.map(d => d.low));
-            
-            candleData.forEach((candle, i) => {
-                const x = i * candleWidth + candleWidth / 2;
-                const color = candle.close > candle.open ? '#44ff44' : '#ff4444';
-                
-                // Create candle element
-                const candleElement = document.createElement('div');
-                candleElement.className = 'candle';
-                candleElement.style.left = x + 'px';
-                candleElement.style.background = color;
-                
-                const candleHeight = Math.abs(candle.close - candle.open) * yScale;
-                const top = canvas.height - Math.max(candle.close, candle.open) * yScale + minPrice * yScale;
-                
-                candleElement.style.height = Math.max(1, candleHeight) + 'px';
-                candleElement.style.top = top + 'px';
-                
-                // Create wick element
-                const wickElement = document.createElement('div');
-                wickElement.className = 'candle-wick';
-                wickElement.style.height = (candle.high - candle.low) * yScale + 'px';
-                wickElement.style.top = (canvas.height - candle.high * yScale + minPrice * yScale) + 'px';
-                
-                canvas.appendChild(candleElement);
-                canvas.appendChild(wickElement);
-            });
-        }
-        
-        // Buy stock
-        function buyStock() {
-            if (balance >= price) {
-                shares++;
-                balance -= price;
-                purchaseMarkers.push({
-                    timeIndex: priceHistory.length - 1,
-                    price: price
-                });
-                updateDisplay();
-            }
-        }
-
-        
-        // Sell stock
-        function sellStock() {
-            if (shares > 0) {
-                shares--;
-                balance += price;
-                updateDisplay();
-            }
-        }
-
-        function clearPurchaseMarkers() {
-            const markers = chartContainer.getElementsByClassName('purchase-marker');
-            const prices = chartContainer.getElementsByClassName('purchase-price');
-            while (markers.length > 0) markers[0].remove();
-            while (prices.length > 0) prices[0].remove();
-        }
-
-        
-        // Update display
-        function updateDisplay() {
-            document.getElementById('portfolio-value').textContent = 
-                `$${(shares * price).toFixed(2)}`;
-            document.getElementById('shares-owned').textContent = 
-                `${shares} shares`;
-            document.getElementById('cash-balance').textContent = 
-                `$${balance.toFixed(2)}`;
-            document.getElementById('current-price').textContent = 
-                `$${price.toFixed(2)}`;
-        }
-        
-        // Update news
-        function updateNews() {
-            const newsElement = document.getElementById('news-ticker');
-            const newsItem = newsItems[Math.floor(Math.random() * newsItems.length)];
-            newsElement.textContent = newsItem.text;
-            newsElement.className = 'news ' + (newsItem.positive ? 'positive' : 'negative');
-            newsElement.onclick = () => {
-                updatePrice(newsItem.impact);
-            };
-        }
-        
-        // Initialize canvas size
+    
         function resizeCanvas() {
+            const { canvas } = initCanvas();
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
         }
+        
+        const chartContainer = document.getElementById('chart-container');
+        const canvas = document.getElementById('price-chart');
+        const ctx = canvas.getContext('2d');
+        
+        // Setup event listeners
+        document.getElementById('buyButton').addEventListener('click', buyStock);
+        document.getElementById('sellButton').addEventListener('click', sellStock);
+        document.getElementById('toggleButton').addEventListener('click', toggleChartType);
         
         // Setup
         window.onload = () => {
@@ -450,8 +228,7 @@
             setInterval(updateNews, 5000);
         }
         
-        window.onresize = resizeCanvas;
-
+        window.onresize = resizeCanvas;    
     </script>
 </body>
 </html>

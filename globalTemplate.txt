@@ -1,0 +1,11 @@
+import { 
+    price, 
+    shares, 
+    balance, 
+    portfolioValue, 
+    priceHistory,
+    purchaseMarkers,
+    isLineChart,
+    candleData,
+    timeIndex,
+} from '../other/global.js';
