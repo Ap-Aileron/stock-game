@@ -4,14 +4,12 @@ import {
     balance, 
     purchaseMarkers,
     priceHistory,
-    // Import the setter functions
     setShares,
     setBalance
 } from './global.js';
 
 import { updateDisplay } from './updateDisplay.js';
 
-// Buy stock
 export function buyStock() {
     if (balance >= price) {
         setShares(shares + 1);
@@ -24,7 +22,6 @@ export function buyStock() {
     }
 }
 
-// Sell stock
 export function sellStock() {
     if (shares > 0) {
         setShares(shares - 1);
