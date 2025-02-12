@@ -25,10 +25,8 @@ export function updatePrice(newsImpact = 0) {
     setPrice(Math.max(1, price + change));
     priceHistory.push(price);
     
-    // Keep only last 100 prices
     if (priceHistory.length > 100) {
         priceHistory.shift();
-        // Update markers' time indices when shifting
         setPurchaseMarkers(purchaseMarkers
             .map(marker => ({
                 ...marker,
@@ -38,7 +36,6 @@ export function updatePrice(newsImpact = 0) {
         );
     }
     
-    // Update candle data
     if (priceHistory.length % 5 === 0) {
         const segment = priceHistory.slice(-5);
         candleData.push({
@@ -50,7 +47,6 @@ export function updatePrice(newsImpact = 0) {
         if (candleData.length > 20) candleData.shift();
     }
     
-    // Update portfolio value
     setPortfolioValue(shares * price);
     
     updateDisplay();
