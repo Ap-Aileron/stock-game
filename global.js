@@ -1,4 +1,3 @@
-// globals.js
 export let price = 100;
 export let timeIndex = 0;
 export let priceHistory = [];
@@ -9,7 +8,6 @@ export let isLineChart = true;
 export let shares = 0;
 export let balance = 1000;
 
-// Setter functions
 export const setPrice = (newPrice) => price = newPrice;
 export const setTimeIndex = (newIndex) => timeIndex = newIndex;
 export const setPriceHistory = (newHistory) => priceHistory = newHistory;

@@ -23,7 +23,6 @@ const newsItems = [
 
 ];
 
-// Update news
 export function updateNews() {
     const newsElement = document.getElementById('news-ticker');
     const newsItem = newsItems[Math.floor(Math.random() * newsItems.length)];

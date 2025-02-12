@@ -25,10 +25,10 @@ function handleHover(e) {
     if (index >= 0 && index < priceHistory.length) {
         const price = priceHistory[index];
         hoverPrice.style.display = 'block';
-        hoverPrice.style.left = `${e.clientX - 50}px`;  // Offset for centering
-        hoverPrice.style.top = `${e.clientY - 40}px`;   // Moved up slightly
+        hoverPrice.style.left = `${e.clientX - 50}px`;  
+        hoverPrice.style.top = `${e.clientY - 40}px`;  
         hoverPrice.textContent = `Price: $${price.toFixed(2)}`;
-        drawChart(); // Redraw with vertical line
+        drawChart(); 
     }
 }
 
